@@ -9,6 +9,7 @@
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
+@inject RoleManager<ApplicationRole> RoleManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject ILogger<Register> Logger
@@ -68,15 +69,22 @@
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
+        var userRole = CreateUserRole();
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
+        var userResult = await UserManager.CreateAsync(user, Input.Password);
 
-        if (!result.Succeeded)
+        if (!userResult.Succeeded)
         {
-            identityErrors = result.Errors;
+            identityErrors = userResult.Errors;
+            return;
+        }
+        var roleResult = await UserManager.AddToRoleAsync(user, API.Entities.LMSRole.None.ToString());
+        if (!roleResult.Succeeded)
+        {
+            identityErrors = roleResult.Errors;
             return;
         }
 
@@ -112,6 +120,19 @@
         {
             throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
                 $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+
+    private ApplicationUserRole CreateUserRole()
+    {
+        try
+        {
+            return Activator.CreateInstance<ApplicationUserRole>();
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUserRole)}'. " +
+                $"Ensure that '{nameof(ApplicationUserRole)}' is not an abstract class and has a parameterless constructor.");
         }
     }
 

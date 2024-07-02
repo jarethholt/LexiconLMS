@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+﻿//using System.Globalization;
 using LexiconLMS.API.Entities;
 using Microsoft.AspNetCore.Identity;
 
@@ -6,7 +6,7 @@ namespace LexiconLMS.Blazor.Data;
 
 public class ApplicationRole : IdentityRole
 {
-    public UserRole UserRole { get; set; }
+    public LMSRole UserRole { get; set; }
     public override string? Name
     {
         get => UserRole.ToString();

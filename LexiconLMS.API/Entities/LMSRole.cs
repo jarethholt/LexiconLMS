@@ -1,6 +1,6 @@
 ﻿namespace LexiconLMS.API.Entities;
 
-public enum UserRole
+public enum LMSRole
 {
     None = 0,
     Student,

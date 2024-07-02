@@ -25,6 +25,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
 
+        var adminUser = new ApplicationUser
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserName = "admin@admin.org",
+            NormalizedUserName = "ADMIN@ADMIN.ORG",
+            Email = "admin@admin.org",
+            NormalizedEmail = "ADMIN@ADMIN.ORG",
+            EmailConfirmed = true,
+            LockoutEnabled = false,
+            SecurityStamp = Guid.NewGuid().ToString()
+        };
+        var hasher = new PasswordHasher<ApplicationUser>();
+        adminUser.PasswordHash = hasher.HashPassword(adminUser, "admin");
+
         builder.Entity<ApplicationUser>(b =>
         {
             // Each User can have many entries in the UserRole join table
@@ -32,7 +46,22 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithOne(ur => ur.User)
                 .HasForeignKey(ur => ur.UserId)
                 .IsRequired();
+            b.HasData(adminUser);
         });
+        //builder.Entity<ApplicationUser>().HasData(adminUser);
+
+        Dictionary<LMSRole, ApplicationRole> roleDict = [];
+        foreach (var role in Enum.GetValues<LMSRole>())
+        {
+            roleDict[role] = new ApplicationRole
+            {
+                UserRole = role,
+                Name = role.ToString(),
+                NormalizedName = role.ToString().ToUpperInvariant(),
+                Id = Guid.NewGuid().ToString(),
+                ConcurrencyStamp = Guid.NewGuid().ToString()
+            };
+        }
 
         builder.Entity<ApplicationRole>(b =>
         {
@@ -41,18 +70,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithOne(ur => ur.Role)
                 .HasForeignKey(ur => ur.RoleId)
                 .IsRequired();
+            b.HasData([.. roleDict.Values]);
         });
-        var test = Enum.GetValues<UserRole>();
-        foreach (var role in Enum.GetValues<UserRole>())
+        //builder.Entity<ApplicationRole>().HasData([.. roleDict.Values]);
+
+        ApplicationUserRole appUserRole = new()
         {
-            builder.Entity<ApplicationRole>().HasData(new ApplicationRole
-            {
-                UserRole = role,
-                Name = role.ToString(),
-                NormalizedName = role.ToString().ToUpperInvariant(),
-                Id = Guid.NewGuid().ToString(),
-                ConcurrencyStamp = Guid.NewGuid().ToString()
-            });
-        }
+            UserId = adminUser.Id,
+            RoleId = roleDict[LMSRole.Admin].Id
+        };
+        builder.Entity<ApplicationUserRole>().HasData(appUserRole);
     }
 }

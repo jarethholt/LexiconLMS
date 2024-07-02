@@ -1,4 +1,3 @@
-using LexiconLMS.API.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace LexiconLMS.Blazor.Data
