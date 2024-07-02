@@ -3,23 +3,56 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace LexiconLMS.Blazor.Data
+namespace LexiconLMS.Blazor.Data;
+
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    : IdentityDbContext<
+        ApplicationUser,
+        ApplicationRole,
+        string,
+        IdentityUserClaim<string>,
+        ApplicationUserRole,
+        IdentityUserLogin<string>,
+        IdentityRoleClaim<string>,
+        IdentityUserToken<string>
+    >(options)
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+    public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+    public DbSet<ApplicationRole> ApplicationRoles { get; set; }
+    public DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        protected override void OnModelCreating(ModelBuilder builder)
+        base.OnModelCreating(builder);
+
+        builder.Entity<ApplicationUser>(b =>
         {
-            base.OnModelCreating(builder);
-            foreach (var roleName in Enum.GetNames<UserRole>())
+            // Each User can have many entries in the UserRole join table
+            b.HasMany(u => u.UserRoles)
+                .WithOne(ur => ur.User)
+                .HasForeignKey(ur => ur.UserId)
+                .IsRequired();
+        });
+
+        builder.Entity<ApplicationRole>(b =>
+        {
+            // Each Role can have many entries in the UserRole join table
+            b.HasMany(r => r.UserRoles)
+                .WithOne(ur => ur.Role)
+                .HasForeignKey(ur => ur.RoleId)
+                .IsRequired();
+        });
+        var test = Enum.GetValues<UserRole>();
+        foreach (var role in Enum.GetValues<UserRole>())
+        {
+            builder.Entity<ApplicationRole>().HasData(new ApplicationRole
             {
-                builder.Entity<IdentityRole>().HasData(new IdentityRole
-                {
-                    Name = roleName,
-                    NormalizedName = roleName.ToUpperInvariant(),
-                    Id = Guid.NewGuid().ToString(),
-                    ConcurrencyStamp = Guid.NewGuid().ToString()
-                });
-            }
+                UserRole = role,
+                Name = role.ToString(),
+                NormalizedName = role.ToString().ToUpperInvariant(),
+                Id = Guid.NewGuid().ToString(),
+                ConcurrencyStamp = Guid.NewGuid().ToString()
+            });
         }
     }
 }
