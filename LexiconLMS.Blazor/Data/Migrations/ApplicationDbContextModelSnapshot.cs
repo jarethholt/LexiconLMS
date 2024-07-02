@@ -17,7 +17,7 @@ namespace LexiconLMS.Blazor.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -63,9 +63,6 @@ namespace LexiconLMS.Blazor.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -115,36 +112,6 @@ namespace LexiconLMS.Blazor.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "aeb40f24-8379-4c6a-bc8e-6636b3f14645",
-                            ConcurrencyStamp = "b74f27bb-3757-49ad-bb71-b11fdd60026b",
-                            Name = "None",
-                            NormalizedName = "NONE"
-                        },
-                        new
-                        {
-                            Id = "943c5597-f06c-4fc0-95fa-ba0a78ab0fc0",
-                            ConcurrencyStamp = "5ea93c2a-c046-4c8c-ac1c-56b3a1de0bc5",
-                            Name = "Student",
-                            NormalizedName = "STUDENT"
-                        },
-                        new
-                        {
-                            Id = "faefdd44-558c-43d9-ab2c-6e8b89763eeb",
-                            ConcurrencyStamp = "49808ff7-52bf-4363-92e6-9c7397aae040",
-                            Name = "Teacher",
-                            NormalizedName = "TEACHER"
-                        },
-                        new
-                        {
-                            Id = "1342f7c1-a736-42e1-a050-c8a8bb417579",
-                            ConcurrencyStamp = "184276cb-4167-472b-9c33-7cb3c883ce96",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
