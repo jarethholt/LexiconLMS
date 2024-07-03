@@ -1,0 +1,13 @@
+﻿@page "/RoleTestPage"
+
+<h3>Role test page</h3>
+
+<p>@AuthMessage</p>
+
+<p>The user is in roles: @UsersRolesString.</p>
+
+<AuthorizeView Roles="Teacher, Admin">
+    <Authorized>
+        The available roles are: @AvailableRolesString.
+    </Authorized>
+</AuthorizeView>
