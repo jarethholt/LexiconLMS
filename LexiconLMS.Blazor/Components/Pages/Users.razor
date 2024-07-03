@@ -1,0 +1,32 @@
+﻿@page "/Users"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Teacher, Admin")]
+
+<h3>User Management</h3>
+
+<NavLink class="btn btn-primary" href="Users/add">Add new user</NavLink>
+
+<table class="table table-hover align-middle">
+    <thead class="thead-light">
+        <tr>
+            <th>Id</th>
+            <th>Email</th>
+            <th>Roles</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var (user, roles) in AllUsersWithRoles)
+        {
+            <tr>
+                <td>@user.Id.Substring(0, 5) ...</td>
+                <td>@user.Email</td>
+                <td>@(string.Join(", ", roles))</td>
+                <td>
+                    <NavLink class="btn btn-primary" href=@($"Users/edit?Id={user.Id}")>Edit</NavLink>
+                    <button class="btn btn-danger" @onclick="DeleteUser">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
