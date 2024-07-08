@@ -11,13 +11,13 @@ public partial class Users
     private UserManager<ApplicationUser> UserManager { get; set; } = null!;
 
     // Used to add or edit currently selected user
-    ApplicationUser ObjUser = new();
+    ApplicationUser? UserToEdit = null;
     // Tracks role for the selected user
-    string ObjUserRole { get; set; } = LMSRole.None.ToString();
+    LMSRole? UserToEditRole { get; set; } = null;
     // Collection to display existing users
-    readonly List<(ApplicationUser, IList<string>)> AllUsersWithRoles = [];
+    readonly List<(ApplicationUser, IEnumerable<LMSRole>)> AllUsersWithRoles = [];
     // To hold any errors
-    string ErrorMessage = "";
+    string? ErrorMessage = null;
     // To enable showing the Popup
     bool ShowPopup;
 
@@ -27,27 +27,34 @@ public partial class Users
     public async Task GetUsers()
     {
         // Clear error messages
-        ErrorMessage = "";
+        ErrorMessage = null;
         // Clear users
         AllUsersWithRoles.Clear();
         // Get users from UserManager
         foreach (var user in UserManager.Users)
         {
-            var roles = await UserManager.GetRolesAsync(user);
+            var roles = (await UserManager.GetRolesAsync(user)).Select(r => Enum.Parse<LMSRole>(r));
             AllUsersWithRoles.Add((user, roles));
         }
     }
 
-    public void OnRoleChanged(LMSRole role) =>
-        ObjUserRole = role.ToString();
+    public void OnRoleChanged(LMSRole? role) =>
+        UserToEditRole = role;
 
-    void AddNewUser()
+    public bool IsNewUser =>
+        string.IsNullOrWhiteSpace(UserToEdit?.Id);
+
+    void OnAddNewUserClicked()
     {
         // Make new user
-        ObjUser = new ApplicationUser
-        {
-            Id = ""
-        };
+        UserToEdit = new ApplicationUser { Id = "" };
+        ShowPopup = true;
+    }
+
+    void OnEditUserClicked(ApplicationUser userToEdit, IEnumerable<LMSRole> userRoles)
+    {
+        UserToEdit = userToEdit;
+        UserToEditRole = userRoles.FirstOrDefault();
         ShowPopup = true;
     }
 
@@ -55,36 +62,20 @@ public partial class Users
     {
         try
         {
-            // Is this an existing user?
-            if (!string.IsNullOrWhiteSpace(ObjUser.Id))
+            // Throw error immediately if a role has not been chosen
+            if (UserToEditRole is null)
             {
-                // Get the user
-                var user = await UserManager.FindByIdAsync(ObjUser.Id);
-                if (user is null)
-                {
-                    ErrorMessage = $"Could not find user with ID {ObjUser.Id}";
-                    return;
-                }
-                user.Email = ObjUser.Email;
-                await UserManager.UpdateAsync(user);
-
-                // Handle roles
-                var userRole = (await UserManager.GetRolesAsync(user)).FirstOrDefault() ?? LMSRole.None.ToString();
-                if (!userRole.Equals(ObjUserRole))
-                {
-                    await UserManager.RemoveFromRoleAsync(user, userRole);
-                    await UserManager.AddToRoleAsync(user, ObjUserRole);
-                }
-                ShowPopup = false;
-                await GetUsers();
+                throw new Exception("A user role must be selected.");
             }
-            else
+
+            // Is this a new user?
+            if (IsNewUser)
             {
                 // Insert new user
                 var newUser = new ApplicationUser
                 {
-                    Email = ObjUser.Email,
-                    UserName = ObjUser.Email
+                    Email = UserToEdit?.Email,
+                    UserName = UserToEdit?.Email
                 };
                 var createResult = await UserManager.CreateAsync(newUser);
 
@@ -94,22 +85,31 @@ public partial class Users
                         ?? "Unknown error when creating user";
                     return;  // Do not close the popup
                 }
-                else
+
+                // Handle roles
+                var addRoleResult = await UserManager.AddToRoleAsync(newUser, (UserToEditRole ?? default).ToString());
+                if (!addRoleResult.Succeeded)
                 {
-                    // Handle roles
-                    var addRoleResult = await UserManager.AddToRoleAsync(newUser, ObjUserRole);
-                    if (!addRoleResult.Succeeded)
-                    {
-                        ErrorMessage = addRoleResult.Errors.FirstOrDefault()?.Description
-                            ?? "Unknown error when adding user role";
-                        return;
-                    }
+                    ErrorMessage = addRoleResult.Errors.FirstOrDefault()?.Description
+                        ?? "Unknown error when adding user role";
+                    return;
                 }
-                // Close the Popup
-                ShowPopup = false;
-                // Refresh users
-                await GetUsers();
             }
+            else
+            {
+                // Handle roles
+                var userRole = (await UserManager.GetRolesAsync(UserToEdit!)).FirstOrDefault() ?? LMSRole.None.ToString();
+                if (!userRole.Equals(UserToEditRole))
+                {
+                    await UserManager.RemoveFromRoleAsync(UserToEdit!, userRole);
+                    await UserManager.AddToRoleAsync(UserToEdit!, (UserToEditRole ?? default).ToString());
+                }
+            }
+
+            // Close the Popup
+            ClosePopup();
+            // Refresh users
+            await GetUsers();
         }
         catch (Exception ex)
         {
@@ -117,33 +117,18 @@ public partial class Users
         }
     }
 
-    async Task EditUser(ApplicationUser userToEdit)
+    async Task DeleteUser(ApplicationUser user)
     {
-        var user = await UserManager.FindByIdAsync(userToEdit.Id);
-        if (user is null)
-        {
-            ErrorMessage = $"An error occurred trying to retrieve the user {userToEdit.Id}";
-        }
-        else
-        {
-            ObjUser = userToEdit;
-            var userRoles = await UserManager.GetRolesAsync(user);
-            ObjUserRole = userRoles?.FirstOrDefault() ?? LMSRole.None.ToString();
-        }
-        ShowPopup = true;
-    }
-
-    async Task DeleteUser(string userId)
-    {
-        // Close the popup
-        ShowPopup = false;
-        // Get the user
-        var user = await UserManager.FindByIdAsync(userId);
-        if (user is not null)
-            await UserManager.DeleteAsync(user);
+        await UserManager.DeleteAsync(user);
+        ClosePopup();
         await GetUsers();
     }
 
-    void ClosePopup() =>
+    void ClosePopup()
+    {
         ShowPopup = false;
+        UserToEdit = null;
+        UserToEditRole = null;
+        ErrorMessage = null;
+    }
 }

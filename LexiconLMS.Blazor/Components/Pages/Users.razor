@@ -5,7 +5,7 @@
 
 <h3>User Management</h3>
 
-<button class="btn btn-primary" @onclick="AddNewUser">Add new user</button>
+<button class="btn btn-primary" @onclick="OnAddNewUserClicked">Add new user</button>
 
 <table class="table table-hover align-middle">
     <thead class="thead-light">
@@ -24,8 +24,8 @@
                 <td>@user.Email</td>
                 <td>@(string.Join(", ", roles))</td>
                 <td>
-                    <button class="btn btn-primary" @onclick="(() => EditUser(user))">Edit</button>
-                    <button class="btn btn-danger" @onclick="(() => DeleteUser(user.Id))">Delete</button>
+                    <button class="btn btn-primary" @onclick="(() => OnEditUserClicked(user, roles))">Edit</button>
+                    <button class="btn btn-danger" @onclick="(() => DeleteUser(user))">Delete</button>
                 </td>
             </tr>
         }
@@ -46,29 +46,34 @@
 
                 <!-- Edit form for the current user -->
                 <div class="modal-body">
-                    <!-- Only allow editing if a new user -->
-                    @if (!string.IsNullOrWhiteSpace(ObjUser.Id))
+                    <!-- Only allow editing email if a new user -->
+                    <label for="email" class="col-form-label">Email</label>
+                    <InputText id="email"
+                                class="form-control"
+                                DisplayName="Email"
+                                @bind-Value="UserToEdit!.Email"
+                                readonly="@(!IsNewUser)" />
+                    <RoleDropdown OnRoleChanged="@OnRoleChanged"
+                                  InitialRole="@UserToEditRole" />
+
+                    <!-- Display any error messages -->
+                    @if (ErrorMessage is not null)
                     {
-                        <p>@ObjUser.Email</p>
+                        <div class="container px-0 my-3">
+                            <p class="text-danger">@ErrorMessage</p>
+                        </div>
                     }
-                    else
-                    {
-                        <label for="email" class="col-form-label">Email</label>
-                        <InputText class="form-control" DisplayName="Email" @bind-Value="ObjUser.Email" />
-                    }
-                    <RoleDropdown OnRoleChanged="@OnRoleChanged" />
-                    <br /><br />
 
                     <!-- Button to save the user -->
-                    <button class="btn btn-primary" @onclick="SaveUser">Save</button>
+                    <div class="container px-0 my-3">
+                        <button class="btn btn-primary" @onclick="SaveUser">Save</button>
 
-                    <!-- Only show delete if not a new record -->
-                    @if (!string.IsNullOrWhiteSpace(ObjUser.Id))
-                    {
-                        <button class="btn btn-danger" @onclick="(() => DeleteUser(ObjUser.Id))">Delete</button>
-                    }
-                    <br />
-                    <span class="text-danger">@ErrorMessage</span>
+                        <!-- Only show delete if not a new record -->
+                        @if (!IsNewUser)
+                        {
+                            <button class="btn btn-danger mx-3" @onclick="(() => DeleteUser(UserToEdit))">Delete</button>
+                        }
+                    </div>
                 </div>
             </div>
         </div>

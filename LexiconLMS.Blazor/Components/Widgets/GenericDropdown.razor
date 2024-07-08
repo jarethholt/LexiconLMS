@@ -4,9 +4,9 @@
 <InputSelect id="@ForName"
              class="form-select"
              DisplayName="@DisplayName"
-             TValue="@TValue"
+             TValue="@(TValue?)"
              @bind-Value="@SelectedValue">
-    <option value="@((TValue)default)" hidden disabled>@DefaultLabel</option>
+    <option value="" selected="@(InitialValue is null)" disabled>@DefaultLabel</option>
     @foreach (var kvp in ValuesDict)
     {
         <option value="@kvp.Key" selected="@(InitialValue is not null && kvp.Key.Equals((TValue)InitialValue))">

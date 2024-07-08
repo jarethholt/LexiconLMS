@@ -8,7 +8,7 @@ public partial class RoleDropdown : ComponentBase
     [Parameter]
     public LMSRole? InitialRole { get; set; } = null;
     [Parameter]
-    public EventCallback<LMSRole> OnRoleChanged { get; set; }
+    public EventCallback<LMSRole?> OnRoleChanged { get; set; }
 
     private readonly Dictionary<LMSRole, string> RolesDict = [];
 

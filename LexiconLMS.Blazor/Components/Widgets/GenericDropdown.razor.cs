@@ -17,10 +17,10 @@ public partial class GenericDropdown<TValue> : ComponentBase where TValue : stru
     [Parameter]
     public Dictionary<TValue, string> ValuesDict { get; set; } = [];
     [Parameter]
-    public EventCallback<TValue> OnValueChanged { get; set; }
+    public EventCallback<TValue?> OnValueChanged { get; set; }
 
-    private TValue _selectedValue;
-    public TValue SelectedValue
+    private TValue? _selectedValue = null;
+    public TValue? SelectedValue
     {
         get => _selectedValue;
         set
@@ -32,6 +32,6 @@ public partial class GenericDropdown<TValue> : ComponentBase where TValue : stru
 
     protected override void OnInitialized()
     {
-        _selectedValue = (InitialValue is null) ? default : (TValue)InitialValue;
+        SelectedValue = InitialValue;
     }
 }
