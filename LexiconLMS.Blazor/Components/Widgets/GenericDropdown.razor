@@ -1,0 +1,16 @@
+﻿@typeparam TValue
+
+<label for="@ForName" class="col-form-label">@LabelText</label>
+<InputSelect id="@ForName"
+             class="form-select"
+             DisplayName="@DisplayName"
+             TValue="@TValue"
+             @bind-Value="@SelectedValue">
+    <option value="@((TValue)default)" hidden disabled>@DefaultLabel</option>
+    @foreach (var kvp in ValuesDict)
+    {
+        <option value="@kvp.Key" selected="@(InitialValue is not null && kvp.Key.Equals((TValue)InitialValue))">
+            @kvp.Value
+        </option>
+    }
+</InputSelect>

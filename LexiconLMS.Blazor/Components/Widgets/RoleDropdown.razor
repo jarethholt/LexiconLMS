@@ -1,0 +1,10 @@
+﻿@using LexiconLMS.API.Entities
+
+<GenericDropdown TValue="@LMSRole" 
+                 LabelText="User role: "
+                 ForName="role"
+                 DisplayName="RoleSelect"
+                 DefaultLabel="Choose a role"
+                 InitialValue="@InitialRole"
+                 ValuesDict="@RolesDict"
+                 OnValueChanged="@OnRoleChanged" />
