@@ -1,10 +1,11 @@
 ﻿@page "/Users"
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Teacher, Admin")]
+@rendermode InteractiveServer
 
 <h3>User Management</h3>
 
-<NavLink class="btn btn-primary" href="Users/add">Add new user</NavLink>
+<button class="btn btn-primary" @onclick="AddNewUser">Add new user</button>
 
 <table class="table table-hover align-middle">
     <thead class="thead-light">
@@ -23,10 +24,53 @@
                 <td>@user.Email</td>
                 <td>@(string.Join(", ", roles))</td>
                 <td>
-                    <NavLink class="btn btn-primary" href=@($"Users/edit?Id={user.Id}")>Edit</NavLink>
-                    <button class="btn btn-danger" @onclick="DeleteUser">Delete</button>
+                    <button class="btn btn-primary" @onclick="(() => EditUser(user))">Edit</button>
+                    <button class="btn btn-danger" @onclick="(() => DeleteUser(user.Id))">Delete</button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+@if (ShowPopup)
+{
+    <!-- Popup to create or edit a user -->
+    <div class="modal" tabindex="-1" style="display:block" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Add user</h3>
+                    <!-- Button to close the popup -->
+                    <button type="button" class="btn btn-close" @onclick="ClosePopup"></button>
+                </div>
+
+                <!-- Edit form for the current user -->
+                <div class="modal-body">
+                    <!-- Only allow editing if a new user -->
+                    @if (!string.IsNullOrWhiteSpace(ObjUser.Id))
+                    {
+                        <p>@ObjUser.Email</p>
+                    }
+                    else
+                    {
+                        <label for="email" class="col-form-label">Email</label>
+                        <InputText class="form-control" DisplayName="Email" @bind-Value="ObjUser.Email" />
+                    }
+                    <RoleDropdown OnRoleChanged="@OnRoleChanged" />
+                    <br /><br />
+
+                    <!-- Button to save the user -->
+                    <button class="btn btn-primary" @onclick="SaveUser">Save</button>
+
+                    <!-- Only show delete if not a new record -->
+                    @if (!string.IsNullOrWhiteSpace(ObjUser.Id))
+                    {
+                        <button class="btn btn-danger" @onclick="(() => DeleteUser(ObjUser.Id))">Delete</button>
+                    }
+                    <br />
+                    <span class="text-danger">@ErrorMessage</span>
+                </div>
+            </div>
+        </div>
+    </div>
+}

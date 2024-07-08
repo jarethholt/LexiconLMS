@@ -13,12 +13,14 @@ namespace LexiconLMS.Blazor.Components.Pages
         private Task<AuthenticationState>? AuthStateTask { get; set; }
         [Inject]
         private RoleManager<ApplicationRole> RoleManager { get; set; } = null!;
+        [Inject]
+        private UserManager<ApplicationUser> UserManager { get; set; } = null!;
 
         private string AuthMessage = "The user is NOT authenticated.";
         private List<ApplicationRole> AvailableRoles = [];
         private string AvailableRolesString =>
             string.Join(", ", AvailableRoles);
-        private List<ApplicationRole> UsersRoles = [];
+        private List<string> UsersRoles = [];
         private string UsersRolesString =>
             string.Join(", ", UsersRoles);
 
@@ -29,17 +31,23 @@ namespace LexiconLMS.Blazor.Components.Pages
             {
                 var authState = await AuthStateTask;
                 var user = authState?.User;
-                foreach (var role in AvailableRoles)
-                {
-                    if (user is not null && user.IsInRole(role.Name ?? ""))
-                        UsersRoles.Add(role);
-                }
+                //foreach (var role in AvailableRoles)
+                //{
+                //    if (user is not null && user.IsInRole(role.Name ?? ""))
+                //        UsersRoles.Add(role);
+                //}
                 if (user is null)
                     AuthMessage = "The user is NOT authenticated.";
                 else if (user.IsInRole(LMSRole.Teacher.ToString()) || user.IsInRole(LMSRole.Admin.ToString()))
                     AuthMessage = $"{user.Identity?.Name ?? "The user"} can change other users' roles.";
                 else if (user?.Identity is not null && user.Identity.IsAuthenticated)
                     AuthMessage = $"{user.Identity.Name} is authenticated.";
+
+                if (!string.IsNullOrWhiteSpace(user?.Identity?.Name))
+                {
+                    var userObj = await UserManager.FindByNameAsync(user.Identity.Name);
+                    UsersRoles = (await UserManager.GetRolesAsync(userObj!)).ToList();
+                }
             }
         }
     }
